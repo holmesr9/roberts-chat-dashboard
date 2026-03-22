@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robert's Chat Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #1a1d2e 0%, #16213e 100%);
+      border-bottom: 1px solid #2d3748;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-left h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #7c83fd, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-left p {
+      color: #718096;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      background: #1e2235;
+      border: 1px solid #2d3748;
+      border-radius: 10px;
+      padding: 10px 18px;
+      text-align: center;
+    }
+
+    .stat-box .num {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #a78bfa;
+    }
+
+    /* LIVE WIDGETS */
+    .live-widgets {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .clock-widget {
+      background: #1e2235;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 10px 18px;
+      text-align: center;
+      min-width: 130px;
+    }
+
+    .clock-time {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #7c83fd;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      font-family: 'Courier New', monospace;
+    }
+
+    .clock-date {
+      font-size: 0.7rem;
+      color: #718096;
+      margin-top: 2px;
+    }
+
+    .weather-widget {
+      background: #1e2235;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 10px 18px;
+      text-align: center;
+      min-width: 150px;
+      position: relative;
+    }
+
+    .weather-top {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .weather-icon { font-size: 1.4rem; }
+
+    .weather-temp {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #f6ad55;
+    }
+
+    .weather-desc {
+      font-size: 0.7rem;
+      color: #718096;
+      margin-top: 2px;
+    }
+
+    .weather-loc {
+      font-size: 0.68rem;
+      color: #4a5568;
+      margin-top: 1px;
+    }
+
+    .live-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #48bb78;
+      margin-right: 4px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .stat-box .label {
+      font-size: 0.72rem;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* CONTROLS */
+    .controls {
+      padding: 20px 32px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: #0f1117;
+      border-bottom: 1px solid #1e2235;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 400px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #718096;
+    }
+
+    #search {
+      width: 100%;
+      padding: 9px 12px 9px 38px;
+      background: #1a1d2e;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #search:focus { border-color: #7c83fd; }
+    #search::placeholder { color: #4a5568; }
+
+    .filter-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #2d3748;
+      background: #1a1d2e;
+      color: #a0aec0;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: #7c83fd;
+      border-color: #7c83fd;
+      color: #fff;
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 28px 32px;
+    }
+
+    /* CARD */
+    .card {
+      background: #1a1d2e;
+      border: 1px solid #2d3748;
+      border-radius: 14px;
+      padding: 22px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .card.automation::before  { background: linear-gradient(90deg, #f6ad55, #ed8936); }
+    .card.healthcare::before  { background: linear-gradient(90deg, #68d391, #38a169); }
+    .card.social::before      { background: linear-gradient(90deg, #63b3ed, #3182ce); }
+    .card.legal::before       { background: linear-gradient(90deg, #fc8181, #e53e3e); }
+    .card.general::before     { background: linear-gradient(90deg, #b794f4, #805ad5); }
+    .card.content::before     { background: linear-gradient(90deg, #f687b3, #d53f8c); }
+    .card.tech::before        { background: linear-gradient(90deg, #76e4f7, #0bc5ea); }
+
+    .card:hover {
+      border-color: #7c83fd;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(124, 131, 253, 0.12);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .card.automation .card-icon  { background: rgba(246,173,85,0.15); }
+    .card.healthcare .card-icon  { background: rgba(104,211,145,0.15); }
+    .card.social .card-icon      { background: rgba(99,179,237,0.15); }
+    .card.legal .card-icon       { background: rgba(252,129,129,0.15); }
+    .card.general .card-icon     { background: rgba(183,148,244,0.15); }
+    .card.content .card-icon     { background: rgba(246,135,179,0.15); }
+    .card.tech .card-icon        { background: rgba(118,228,247,0.15); }
+
+    .card-title {
+      font-size: 0.97rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      line-height: 1.35;
+      flex: 1;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #48bb78;
+      flex-shrink: 0;
+      margin-top: 6px;
+      box-shadow: 0 0 6px rgba(72,187,120,0.5);
+    }
+
+    .category-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .card.automation .category-tag  { background: rgba(246,173,85,0.15); color: #f6ad55; }
+    .card.healthcare .category-tag  { background: rgba(104,211,145,0.15); color: #68d391; }
+    .card.social .category-tag      { background: rgba(99,179,237,0.15); color: #63b3ed; }
+    .card.legal .category-tag       { background: rgba(252,129,129,0.15); color: #fc8181; }
+    .card.general .category-tag     { background: rgba(183,148,244,0.15); color: #b794f4; }
+    .card.content .category-tag     { background: rgba(246,135,179,0.15); color: #f687b3; }
+    .card.tech .category-tag        { background: rgba(118,228,247,0.15); color: #76e4f7; }
+
+    .card-preview {
+      font-size: 0.83rem;
+      color: #718096;
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid #2d3748;
+    }
+
+    .card-footer .idle {
+      font-size: 0.76rem;
+      color: #4a5568;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .card-footer .idle::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #48bb78;
+      display: inline-block;
+    }
+
+    .open-btn {
+      font-size: 0.76rem;
+      color: #7c83fd;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .archive-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: transparent;
+      border: none;
+      color: #4a5568;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+
+    .card:hover .archive-btn { opacity: 1; }
+    .archive-btn:hover { background: #2d3748; color: #fc8181; }
+
+    /* ARCHIVED DRAWER */
+    .archived-section {
+      padding: 0 32px 28px;
+      display: none;
+    }
+
+    .archived-section.visible { display: block; }
+
+    .archived-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 14px 0;
+      border-top: 1px solid #2d3748;
+      color: #718096;
+      font-size: 0.85rem;
+      user-select: none;
+    }
+
+    .archived-header:hover { color: #a0aec0; }
+
+    .archived-header .chevron {
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+
+    .archived-header.expanded .chevron { transform: rotate(180deg); }
+
+    .archived-grid {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+      padding-top: 14px;
+    }
+
+    .archived-grid.open { display: grid; }
+
+    .archived-grid .card {
+      opacity: 0.5;
+      filter: grayscale(0.4);
+    }
+
+    .archived-grid .card:hover { opacity: 0.8; filter: none; }
+
+    .restore-btn {
+      font-size: 0.76rem;
+      color: #48bb78;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .archived-badge {
+      font-size: 0.72rem;
+      background: #2d3748;
+      color: #718096;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    /* SESSION TYPE BADGE */
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+
+    .type-badge.chat    { background: rgba(99,179,237,0.15); color: #63b3ed; border: 1px solid rgba(99,179,237,0.25); }
+    .type-badge.cowork  { background: rgba(104,211,145,0.15); color: #68d391; border: 1px solid rgba(104,211,145,0.25); }
+    .type-badge.code    { background: rgba(246,173,85,0.15);  color: #f6ad55; border: 1px solid rgba(246,173,85,0.25); }
+
+    .tags-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #1a1d2e;
+      border: 1px solid #2d3748;
+      border-radius: 18px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 30px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: #2d3748;
+      border: none;
+      color: #a0aec0;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover { background: #4a5568; }
+
+    .modal h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 6px;
+      padding-right: 40px;
+    }
+
+    .modal-meta {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .msg.user .msg-avatar  { background: #7c83fd; color: #fff; }
+    .msg.assistant .msg-avatar { background: #2d3748; color: #a78bfa; }
+
+    .msg-bubble {
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      color: #cbd5e0;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .msg.user .msg-bubble { border-color: #4a5568; }
+
+    .msg-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+      color: #4a5568;
+    }
+
+    .msg.user .msg-label { color: #7c83fd; }
+    .msg.assistant .msg-label { color: #a78bfa; }
+
+    /* EMPTY */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #4a5568;
+    }
+
+    .empty svg { margin-bottom: 12px; }
+    .empty p { font-size: 1rem; }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f1117; }
+    ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4a5568; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🗂 Robert's Chat Dashboard</h1>
+    <p><span class="live-dot"></span>Live — All your Cowork sessions in one place</p>
+  </div>
+  <div class="live-widgets">
+    <!-- CLOCK -->
+    <div class="clock-widget">
+      <div class="clock-time" id="clock-time">--:--:--</div>
+      <div class="clock-date" id="clock-date">Loading...</div>
+    </div>
+    <!-- WEATHER -->
+    <div class="weather-widget" id="weather-widget">
+      <div class="weather-top">
+        <span class="weather-icon" id="weather-icon">⏳</span>
+        <span class="weather-temp" id="weather-temp">--°</span>
+      </div>
+      <div class="weather-desc" id="weather-desc">Fetching weather...</div>
+      <div class="weather-loc" id="weather-loc"></div>
+    </div>
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat-box">
+        <div class="num" id="totalCount">7</div>
+        <div class="label">Sessions</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">5</div>
+        <div class="label">Topics</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:#48bb78;">7</div>
+        <div class="label">Idle</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="search" type="text" placeholder="Search sessions…" oninput="filterCards()"/>
+  </div>
+  <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+  <button class="filter-btn" onclick="setFilter('automation', this)">⚙️ Automation</button>
+  <button class="filter-btn" onclick="setFilter('healthcare', this)">🏥 Healthcare</button>
+  <button class="filter-btn" onclick="setFilter('legal', this)">⚖️ Legal</button>
+  <button class="filter-btn" onclick="setFilter('social', this)">📱 Social</button>
+  <button class="filter-btn" onclick="setFilter('tech', this)">🤖 Tech</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<!-- ARCHIVED SECTION -->
+<div class="archived-section" id="archived-section">
+  <div class="archived-header" id="archived-header" onclick="toggleArchived()">
+    <span class="chevron">▼</span>
+    <span>Archived Sessions</span>
+    <span class="archived-badge" id="archived-badge">0</span>
+  </div>
+  <div class="archived-grid" id="archived-grid"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <h2 id="modal-title"></h2>
+    <div class="modal-meta" id="modal-meta"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+  const sessions = [
+    {
+      id: 1,
+      title: "Automate Repetitive Workflow Process",
+      category: "automation",
+      type: "chat",
+      icon: "⚙️",
+      status: "idle",
+      preview: "Working on automating a manual workflow — currently mapping out the steps, tools involved, and pain points before building a solution.",
+      messages: [
+        { role: "user", text: "I want to automate a repetitive workflow. Give me space to walk you through what I currently do manually: the steps, the tools involved, and where it breaks down. Once that's down, help me think through the best approach with follow-up questions. Only start building once we've agreed on a plan." },
+        { role: "assistant", text: "That sounds like a great use of our time together. Go ahead and walk me through it — I'll just listen and take it all in. Don't worry about being too detailed or too rough; the more context the better. Tell me about the steps, the tools, the pain points, all of it." }
+      ]
+    },
+    {
+      id: 2,
+      title: "FEHB Health Insurance Content & N8N Automation",
+      category: "healthcare",
+      type: "cowork",
+      icon: "🏥",
+      status: "idle",
+      preview: "Built a full N8N automation workflow for publishing FEHB health insurance content to Facebook, Instagram, Email, Google Drive, and Twitter/X — with a setup script and guide.",
+      messages: [
+        { role: "assistant", text: "Everything is built and ready. Here's what I created for you: 3 files — a Setup Script to run once on your Mac, an N8N Workflow File pre-built for Facebook, Instagram, Email, Google Drive, and Twitter/X, and a Setup Guide with full step-by-step instructions." },
+        { role: "assistant", text: "Your next 3 steps: (1) Open Terminal → run setup-n8n-mac.sh, (2) Run start.sh → copy the Cloudflare URL, (3) Paste that URL here and from that point on I push content directly — no copy-paste ever. Once you give me that URL, the full automation is live." }
+      ]
+    },
+    {
+      id: 3,
+      title: "Facebook Access Capability Question",
+      category: "social",
+      type: "chat",
+      icon: "📱",
+      status: "idle",
+      preview: "Explored whether Claude can access Facebook through the browser — yes, via Claude in Chrome extension when already logged in. Can read posts, navigate, and help compose content.",
+      messages: [
+        { role: "user", text: "I want to know — can you access my Facebook?" },
+        { role: "assistant", text: "Yes, I can access Facebook through your browser, but with some important limitations. I can navigate to facebook.com, read and interact with visible content if you're already logged in, help you compose posts, search for content, or navigate around. I cannot log you in or enter your password. To get started I'd need to use your browser via the Claude in Chrome extension." }
+      ]
+    },
+    {
+      id: 4,
+      title: "Add RA Documents to Google Drive",
+      category: "legal",
+      type: "cowork",
+      icon: "⚖️",
+      status: "idle",
+      preview: "Searched Google Drive for Reasonable Accommodation (RA) decision memos and documents related to Army Regulation 690-12. Found key docs including a formal Statement of Events regarding PTSD-based RA claims.",
+      messages: [
+        { role: "assistant", text: "Let me search more broadly for all RA-related documents and memos." },
+        { role: "assistant", text: "Found 2 key documents: (1) 'Understanding Written Justifications in the RA Process: A Beginner's Guide to AR 690-12' — created Jan 29, 2026, covering what agencies must provide when denying accommodations. (2) 'Statement of Events Regarding Reasonable Accommodation and EEO Claims' — from Robert E. Holmes Jr., HR Specialist GS-11, detailing the agency's failure to adhere to federal law, with medical foundation of service-connected PTSD." }
+      ]
+    },
+    {
+      id: 5,
+      title: "General Conversation",
+      category: "general",
+      type: "chat",
+      icon: "💬",
+      status: "idle",
+      preview: "Brief check-in conversation.",
+      messages: [
+        { role: "user", text: "Hey" },
+        { role: "assistant", text: "Hey Robert! How's it going? What can I help you with today?" }
+      ]
+    },
+    {
+      id: 6,
+      title: "FEHB Cost Check — Facebook Post & Infographic",
+      category: "content",
+      type: "cowork",
+      icon: "📊",
+      status: "idle",
+      preview: "Working on creating a Facebook post and infographic for the 3-Step FEHB Cost Check — gathering the specific 3 steps before building out the visual content.",
+      messages: [
+        { role: "assistant", text: "I'll help you create a Facebook post and infographic about the 3-Step FEHB Cost Check! Before I dive in, let me clarify a few details to make sure I create what you need." },
+        { role: "assistant", text: "Perfect! I'm ready to create this for you. I just need you to provide the specific 3 steps for the FEHB cost check. What are they?" }
+      ]
+    },
+    {
+      id: 7,
+      title: "Set Up Talking AI Assistant",
+      category: "tech",
+      type: "chat",
+      icon: "🤖",
+      status: "idle",
+      preview: "Explored voice/talking AI assistant capabilities in Claude — covering mobile app, desktop, and web voice input/output options for hands-free conversations.",
+      messages: [
+        { role: "assistant", text: "I'd be happy to help you with a talking AI assistant! To point you in the right direction, I have a quick question." },
+        { role: "assistant", text: "Claude does have voice capabilities. On mobile (iOS/Android): tap the microphone icon to speak, and Claude can read responses aloud via the speaker icon. On desktop: voice input is available via the microphone button. Tips: speak naturally, interrupt playback on long responses, great for hands-free tasks and brainstorming." }
+      ]
+    }
+  ];
+
+  let activeFilter = 'all';
+  let archivedIds = JSON.parse(sessionStorage.getItem('archivedIds') || '[]');
+
+  function saveArchived() {
+    sessionStorage.setItem('archivedIds', JSON.stringify(archivedIds));
+  }
+
+  function buildCard(s, isArchived) {
+    const card = document.createElement('div');
+    card.className = `card ${s.category}`;
+    card.dataset.id = s.id;
+    card.innerHTML = `
+      <button class="archive-btn" title="${isArchived ? 'Restore' : 'Archive'}" onclick="event.stopPropagation(); ${isArchived ? 'restoreSession' : 'archiveSession'}(${s.id})">
+        ${isArchived ? '↩' : '🗂'}
+      </button>
+      <div class="card-header">
+        <div class="card-icon">${s.icon}</div>
+        <div class="card-title">${s.title}</div>
+        <div class="status-dot"></div>
+      </div>
+      <div class="tags-row">
+        <span class="type-badge ${s.type}">${s.type === 'chat' ? '💬 Chat' : s.type === 'cowork' ? '🛠 Cowork' : '💻 Code'}</span>
+        <span class="category-tag">${s.category}</span>
+      </div>
+      <p class="card-preview">${s.preview}</p>
+      <div class="card-footer">
+        <span class="idle">Idle</span>
+        <span class="open-btn" onclick="event.stopPropagation(); openModal(${s.id})">View Chat →</span>
+      </div>
+    `;
+    if (!isArchived) card.addEventListener('click', () => openModal(s.id));
+    return card;
+  }
+
+  function renderCards(list) {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    const visible = list.filter(s => !archivedIds.includes(s.id));
+    if (visible.length === 0) {
+      grid.innerHTML = `<div class="empty"><svg width="40" height="40" fill="none" stroke="#4a5568" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>No sessions match your search.</p></div>`;
+    } else {
+      visible.forEach(s => grid.appendChild(buildCard(s, false)));
+    }
+    document.getElementById('totalCount').textContent = visible.length;
+    renderArchived();
+  }
+
+  function renderArchived() {
+    const archived = sessions.filter(s => archivedIds.includes(s.id));
+    const section = document.getElementById('archived-section');
+    const agrid = document.getElementById('archived-grid');
+    const badge = document.getElementById('archived-badge');
+    badge.textContent = archived.length;
+    agrid.innerHTML = '';
+    if (archived.length === 0) {
+      section.classList.remove('visible');
+      return;
+    }
+    section.classList.add('visible');
+    archived.forEach(s => agrid.appendChild(buildCard(s, true)));
+  }
+
+  function archiveSession(id) {
+    if (!archivedIds.includes(id)) { archivedIds.push(id); saveArchived(); }
+    filterCards();
+    showToast('Session archived — find it below ↓');
+  }
+
+  function restoreSession(id) {
+    archivedIds = archivedIds.filter(x => x !== id);
+    saveArchived();
+    filterCards();
+    showToast('Session restored ✓');
+  }
+
+  function toggleArchived() {
+    const header = document.getElementById('archived-header');
+    const grid = document.getElementById('archived-grid');
+    header.classList.toggle('expanded');
+    grid.classList.toggle('open');
+  }
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#2d3748;color:#e2e8f0;padding:10px 20px;border-radius:10px;font-size:0.85rem;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.4);animation:fadeIn 0.2s ease;';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2400);
+  }
+
+  // inject toast animation
+  const style = document.createElement('style');
+  style.textContent = '@keyframes fadeIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }';
+  document.head.appendChild(style);
+
+  function filterCards() {
+    const q = document.getElementById('search').value.toLowerCase();
+    let list = sessions;
+    if (activeFilter !== 'all') list = list.filter(s => s.category === activeFilter);
+    if (q) list = list.filter(s => s.title.toLowerCase().includes(q) || s.preview.toLowerCase().includes(q));
+    renderCards(list);
+  }
+
+  function setFilter(cat, btn) {
+    activeFilter = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterCards();
+  }
+
+  function openModal(id) {
+    const s = sessions.find(x => x.id === id);
+    document.getElementById('modal-title').textContent = s.title;
+    const typeLabel = s.type === 'chat' ? '💬 Chat' : s.type === 'cowork' ? '🛠 Cowork' : '💻 Code';
+    document.getElementById('modal-meta').innerHTML = `
+      <span class="type-badge ${s.type}">${typeLabel}</span>
+      <span class="category-tag" style="margin:0;">${s.icon} ${s.category}</span>
+      <span style="font-size:0.78rem;color:#4a5568;display:flex;align-items:center;gap:5px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:#48bb78;display:inline-block;"></span> Idle
+      </span>
+    `;
+    document.getElementById('modal-body').innerHTML = s.messages.map(m => `
+      <div class="msg ${m.role}">
+        <div class="msg-avatar">${m.role === 'user' ? 'RH' : 'AI'}</div>
+        <div class="msg-bubble">
+          <div class="msg-label">${m.role === 'user' ? 'You' : 'Claude'}</div>
+          ${m.text}
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modal')) closeModalDirect();
+  }
+
+  function closeModalDirect() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+
+  renderCards(sessions);
+
+  // ── LIVE CLOCK ──────────────────────────────────────────
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('clock-date').textContent =
+      `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()} ${now.getFullYear()}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── WEATHER (wttr.in — auto-detects location from IP) ───
+  const weatherCodes = {
+    113: ['☀️','Sunny'], 116: ['⛅','Partly Cloudy'], 119: ['☁️','Cloudy'],
+    122: ['☁️','Overcast'], 143: ['🌫','Mist'], 176: ['🌦','Patchy Rain'],
+    179: ['🌨','Patchy Snow'], 182: ['🌧','Sleet'], 185: ['🌧','Freezing Drizzle'],
+    200: ['⛈','Thunder'], 227: ['🌨','Blowing Snow'], 230: ['❄️','Blizzard'],
+    248: ['🌫','Fog'], 260: ['🌫','Freezing Fog'], 263: ['🌦','Light Drizzle'],
+    266: ['🌧','Drizzle'], 281: ['🌧','Freezing Drizzle'], 284: ['🌧','Heavy Drizzle'],
+    293: ['🌦','Light Rain'], 296: ['🌧','Rain'], 299: ['🌧','Mod. Rain'],
+    302: ['🌧','Heavy Rain'], 305: ['🌧','Heavy Rain'], 308: ['🌧','Torrential Rain'],
+    311: ['🌧','Light Sleet'], 314: ['🌧','Mod. Sleet'], 317: ['🌧','Light Sleet'],
+    320: ['🌨','Light Snow'], 323: ['❄️','Patchy Snow'], 326: ['❄️','Light Snow'],
+    329: ['❄️','Mod. Snow'], 332: ['❄️','Mod. Snow'], 335: ['❄️','Patchy Snow'],
+    338: ['❄️','Heavy Snow'], 350: ['🌧','Ice Pellets'], 353: ['🌦','Light Rain'],
+    356: ['🌧','Mod. Rain'], 359: ['🌧','Heavy Rain'], 362: ['🌧','Light Sleet'],
+    365: ['🌧','Mod. Sleet'], 368: ['❄️','Light Snow'], 371: ['❄️','Mod. Snow'],
+    374: ['🌧','Light Ice'], 377: ['🌧','Mod. Ice'], 386: ['⛈','Thunder Rain'],
+    389: ['⛈','Heavy Thunder'], 392: ['⛈','Thunder Snow'], 395: ['❄️','Blizzard']
+  };
+
+  async function fetchWeather() {
+    try {
+      const res = await fetch('https://wttr.in/?format=j1', { cache: 'no-store' });
+      const data = await res.json();
+      const cur = data.current_condition[0];
+      const code = parseInt(cur.weatherCode);
+      const tempF = cur.temp_F;
+      const desc = cur.weatherDesc[0].value;
+      const city = data.nearest_area[0].areaName[0].value;
+      const country = data.nearest_area[0].country[0].value;
+      const [icon] = weatherCodes[code] || ['🌡️', desc];
+
+      document.getElementById('weather-icon').textContent = icon;
+      document.getElementById('weather-temp').textContent = `${tempF}°F`;
+      document.getElementById('weather-desc').textContent = desc;
+      document.getElementById('weather-loc').textContent = `📍 ${city}, ${country}`;
+    } catch(e) {
+      document.getElementById('weather-icon').textContent = '🌡️';
+      document.getElementById('weather-temp').textContent = '--°';
+      document.getElementById('weather-desc').textContent = 'Weather unavailable';
+    }
+  }
+  fetchWeather();
+  setInterval(fetchWeather, 10 * 60 * 1000); // refresh every 10 min
+</script>
+</body>
+</html>
